@@ -1,0 +1,194 @@
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[a4paper]{article}
+
+\usepackage{color}
+\usepackage{url}
+\usepackage[utf8]{inputenc} % make weird characters work
+\usepackage{graphicx}
+\usepackage[english,serbian]{babel}
+\usepackage[unicode]{hyperref}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\hypersetup{colorlinks,citecolor=green,filecolor=green,linkcolor=blue,urlcolor=blue}
+
+
+\theoremstyle{plain}
+\newtheorem{thm}{Teorema}[section] % reset theorem numbering for each chapter
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definicija} % definition numbers are dependent on theorem numbers
+\newtheorem{exmp}[thm]{Primer} % same for example numbers
+
+
+\begin{document}
+
+\title{Neograničena provera modela softvera kroz inkrementalno SAT rešavanje\\ \small{Seminarski rad u okviru kursa\\Verifikacija softvera\\ Matematički fakultet}}
+
+\author{\href{mailto:mi14042@matf.bg.ac.rs}{Ivan Ristovi\'c}}
+\date{april 2018.}
+
+\maketitle
+
+\abstract{
+U ovom radu je opisana nova tehnika neograničene provere modela softvera za pronalazak grešaka programa pisanih u programskom jeziku C, koristeći inkrementalne SAT rešavače. Od polaznog programa se pravi \emph{DimSpec} formula. \emph{DimSpec} formula predstavlja konjunkciju četiri KNF formule koje kodiraju početno, krajnje i svako tranziciono stanje programa, kao i prelaze između susednih stanja programa. Proces dobijanja \emph{DimSpec} formule od izvornog C koda se odvija u više koraka. Prvo se C kod prevodi u \emph{LLVM} module, koji predstavljaju međureprezentaciju između C koda i mašinskog koda. Ti moduli se zatim prevode u \emph{DimSpec} formulu korišćenjem alata \emph{LLUMC} tako da ciljno stanje predstavlja stanje greške. Tako dobijena \emph{DimSpec} formula se može rešiti pomoću inkrementalnih SAT rešavača ili \emph{IC3} algoritmom za proveru invarijanti. Rešenje prestavlja dokaz neispravnosti programa jer je pronađen način da se iz polaznog stanja stigne u stanje greške. Ovakvo kodiranje proširuje funkcionalnost tradicionalne \emph{ograničene provera modela sofrvera} jer pokriva velike i beskonačne petlje, uz održavanje pristojnih vremenskih performansi.
+}
+
+\tableofcontents
+
+\newpage
+
+\section{Uvod}
+\label{sec:Uvod}
+
+Vrlo je važno iscrpno testirati softver od čijeg izvršavanja zavise ljudski životi illi čije potencijalne greške mogu imati velike materijalne gubitke. Tehnike verifikacije softvera pružaju veliko pokriće programskog koda uz formalni dokaz ispravnosti. Postoje razne tehnike verifikacije softvera, npr. \emph{simboličko izvršavanje} \cite{symbolic} i \emph{ograničena provera modela softvera} \cite{bsmc}.
+
+U ovom radu je opisana tehnika \emph{neograničene provere modela softvera} \cite{ubsmc}. Glavna razlika u odnosu na tradicionalnu ograničenu proveru modela je uklanjanje ograničenja za razvijanje petlji. Naime, ograničena provera modela zahteva razvijanje petlji unapred zadati broj puta zbog neodlučivosti zaustavljanja proizvoljnog programa. Neograničena provera modela ne zahteva razvijanje petlji i stoga predstavlja alat za verifikaciju programa koji u sebi imaju potencijalno beskonačne petlje. Istraživanje je fokusirano na sekvencijalnim C programima i reprezentaciji niskog nivoa koju generiše \emph{LLVM} \cite{llvm}. Na osnovu ove reprezentacije se pravi \emph{DimSpec} formula pomoću alata \emph{LLUMC} \cite{llumc}. \emph{DimSpec} formula se sastoji od četiri KNF formule koje kodiraju stanja programa, naime: početno stanje, krajnje stanje, međustanja i tranzicije između susednih stanja. \emph{DimSpec} formula se dalje prosleđuje inkrementalnim SAT rešavačima.
+
+Pretpostavlja se da čitalac poseduje znanje iskazne logike, logike prvog reda i problema zadovoljivosti logičkih formula. U poglavlju \ref{sec:PomocneTehnike} će biti opisane tehnike i alati na koje se oslanja metoda neograničene provere modela. Definicija stanja programa i proces kodiranja stanja programa u \emph{DimSpec} formulu biti opisan u poglavlju \ref{sec:LLUMCkodiranje}.
+
+
+\section{Pomoćne tehnike i alati}
+\label{sec:PomocneTehnike}
+
+Tehnika neograničene provere modela koristi postojeće alate i tehnike verifikacije softvera. Prvo se uz pomoć alata \emph{LLVM} \cite{llvm} od polaznog C koda dobijaju programski moduli koji predstavljaju ulaz za alat \emph{LLUMC} \cite{llumc}. \emph{LLUMC} kodira module u \emph{DimSpec} format koji predstavlja validnu logičku formulu koja opisuje stanja modula i prelaza između susednih stanja. \emph{Inkrementalno SAT rešavanje} \cite{iss} se koristi za nalaženje modela za takvu \emph{DimSpec} formulu. U ovom poglavlju će biti više reči o navedenim alatima, jer je njihova uloga važna u čitavom procesu neograničene provere modela.
+
+\subsection{Inkrementalno SAT rešavanje}
+\label{subsec:ISS}
+
+Proces inkrementalnog SAT rešavanja \cite{iss} predstavlja inkrementalno dodavanje klauza tokom rešavanja problema zadovoljivosti. U tu svrhu se koriste funkcije \emph{add(C)} i \emph{solve(A)}, gde je \emph{C} klauza a \emph{A} skup literala koji se nazivaju pretpostavke (engl. \emph{assumptions}). Klauze se dodaju koriščenjem funkcije \emph{add} i njihova konjunkcija se rešava pod predpostavkom da su vrednosti svih literala iz \emph{A} tačne, koristeći \emph{solve(A)}.
+
+Dodavanje nove klauze se vrši dodavanjem $C\vee{}a$, gde je \emph{a} neiskorišćeno iskazno slovo. Klauza postaje relevantna čim se doda literal $\neg{}a$ u skup A. Literal \emph{a} se naziva \emph{aktivacioni literal}. Ukoliko se $\neg{}a$ ne doda u skup A, to je ekvivalentno uklanjanju C iz skupa klauza.
+
+\subsection{LLVM međureprezentacija}
+\label{subsec:LLVM}
+
+\emph{LLVM} \cite{llvm} je open-source compiler framework projekat. Za potrebe neograničene provere modela se koristi \emph{LLVM} međureprezentacija C koda. Razlog tome je što je jako kompleksno analizirati C kod i skoro nemoguće je podržati sve alate i biblioteke. S druge strane, \emph{LLVM} međureprezentacija direktnije predstavlja instrukcije i vrši razne optimizacije i uprošćavanja, što je čini idealnom za analizu. \emph{LLVM} međureprezentacija koda se sastoji od više modula, gde se svaki \emph{LLVM} modul može grupisati u nekoliko jedinica:
+\begin{itemize}
+    \item instrukcija
+    \item osnovni blok
+    \item funkcija
+\end{itemize}
+
+\subsection{Ograničena provera modela}
+\label{subsec:BMC}
+
+Prilikom primene tehnike ograničene provere modela \cite{bsmc}, svaka petlja koja se javlja u programu se razvija \emph{k} puta (otuda naziv \emph{ograničena}). Razlog razvijanja petlji je neodlučivost zaustavljanja proizvoljnog programa. Razvijanje petlji omogućava odlučivost ove tehnike, ali takođe predstavlja ozbiljno ograničenje. Nakon razvijanja petlji i kodiranja stanja programa u logičke formule, konstruiše se formula koja predstavlja negaciju željenih svojstava (specifikacije programa) i to se skupa predaje SAT rešavaču. Ukoliko rešavač nađe model za datu formulu, program ne prolazi verifikaciju i nađeni model se može iskoristiti kao test-primer za koji program ne prati specifikaciju.
+
+Postoje razni alati koji implementiraju ograničenu proveru modela. Jedan od njih je alat \emph{LLBMC}, koji je dizajniran da verifikuje programe od kojih zavisi bezbednost ugrađenih sistema. \emph{LLBMC} predstavlja inspiraciju za alat \emph{LLUMC}, koji je ekvivalent za tehniku neograničene provere modela.
+
+\subsection{DimSpec formule}
+\label{subsec:DimSpec}
+
+\emph{DimSpec} formula kodira stanja programa, u oznaci $t_{0}, \dots , t_{k}$ gde svako stanje predstavlja istinitosne vrednosti $n$ bulovskih promenljivih $x_{0}, \dots , x_{n}$. \emph{DimSpec} formula se sastoji od četiri formule: $\mathcal{I}$, $\mathcal{U}$, $\mathcal{G}$ i $\mathcal{T}$. $\mathcal{I}$ predstavlja skup inicijalnih klauza, tj. onih klauza koje stanje $t_{0}$ zadovoljava. $\mathcal{G}$ predstavlja skup završnih klauza, tj. onih koje stanje $t_{k}$ zadovoljava. $\mathcal{U}$ predstavlja skup klauza koje su zadovoljene stanjima $t_{i}$. $\mathcal{T}$ predstavlja skup klauza koje su zadovoljene parovima susednih stanja $t_{i}, t_{i+1}$. Svako stanje u sebi sadrži vrednosti $n$ promenljivih, tako da ukupno imamo $kn$ promenljivih.
+
+Testiranje da li je završno stanje dostižno iz početnog u \emph{k} koraka, je ekvivalentno ispitivanju zadovoljivosti formule
+    \begin{displaymath}
+        F_{k} = \mathcal{I}(0) \wedge \bigg( \bigwedge_{i=0}^{k-1}{(\mathcal{U}(i) \wedge \mathcal{T}(i, i+1))} \bigg) \wedge \mathcal{U}(k) \wedge \mathcal{G}(k),
+    \end{displaymath}
+gde $\mathcal{I}(i), \mathcal{U}(i), \mathcal{G}(i) i \mathcal{T}(i, i+1)$ predstavljaju formule u kojima je svaka promenljiva $x_{j}$ zamenjena sa $x_{j + in}$ - njenom vrednošcu u $i$-tom bloku. Jedan od načina da se nađe najmanji broj koraka za koje se završno stanje dostiže iz polaznog je da se rešavaju formule $F_{1}, F_{2}, \dots$ sve dok se ne nađe zadovoljiva formula. Efikasan način da se ovo implementira je koriščenjem inkrementalnog SAT rešavanja:
+
+    $$\begin{array}{rcl}
+    step(0) & : & \texttt{add}(\mathcal{I}(0) \wedge (a_{0} \vee \mathcal{G}(0)) \wedge \mathcal{U}(0)) \\
+        &   & \texttt{solve}(assumptions = \neg{a_{0}}) \\
+    step(k) & : & \texttt{add}(\mathcal{T}(k - 1, k) \wedge (a_{k} \vee \mathcal{G}(k)) \wedge \mathcal{U}(k)) \\
+        &   & \texttt{solve}(assumptions = \neg{a_{k}})
+    \end{array}$$
+
+Za razliku od ograničene provere modela, tokom primene neograničene provera modela ne proverava se zadovoljivost negirane formule koja kodira stanja programa kako bi se našao kontraprimer. Umesto toga se kao završna stanja smatraju stanja greške (više reči o ovome u poglavljima koji slede) i pokušava se pronaći put od početnog stanja do stanja greške.
+
+
+\section{LLUMC kodiranje stanja programa}
+\label{sec:LLUMCkodiranje}
+
+Stanja programa posmatramo kao stanja svakog osnovnog bloka \emph{LLVM} modula zasebno. Posmatramo takođe i tranzicije između susednih stanja. Svako stanje se sastoji od promenljivih, a svaka promenljiva se kodira kao bit-vektor dužine \emph{n}.
+
+Uvodimo dva specijalna stanja:
+\begin{itemize}
+    \item \emph{ok} stanje - iz ovog stanja ne mogu nastati greške
+    \item \emph{error} stanje - stanje greške
+\end{itemize}
+
+Pre opisa procesa kodiranja \emph{LLVM} modula u \emph{DimSpec} formulu, potrebno je definisati pojam softverske greške za alat \emph{LLUMC}. Jasno je da je nemoguće pokriti sve moguće greške. Stoga se u nastavku ograničavamo na greške \emph{prekoračenja}. Možemo definisati prekoračenje nezavisno od tipa promenljivih i samim tim nezavisno od reprezentacije promenljive preko njenog bit-vektora. Neka je $v$ promenljiva u potpunom komplementu i neka je $l$ duzina bit-vektora koji reprezentuje $v$. Neka $max_{l}$ vraća maksimalnu vrednost za $v$ reprezentovanu bit-vektorom dužine $l$. Tada je $max_{l} = 2^{l-1}-1$. Slično, neka $min_{l}$ vraća minimalnu vrednost. Tada je $min_{l} = -2^{l-1}$. Ukoliko se prilikom sabiranja promenljivih $x$ i $y$ dobija broj veći od $max_{l}$, onda postoji prekoračenje. Prekoračenje se slično definiše za ostale aritmetičke operacije.
+
+Takođe je potrebno uvesti funkcije \texttt{assume} i \texttt{assert}. Program se ponaša po specifikaciji ukoliko svi pozivi funkcije \texttt{assert} vrate \texttt{true} pod uslovom da su svi uslovi iz poziva \texttt{assume} zadovoljeni. Ukoliko \texttt{assume} uslov nije ispunjen, ponašanje programa je nedefinisano i stoga se ne mogu pojaviti greške. Koristeći ove funkcije možemo definisati grešku za program \emph{LLUMC}.
+
+\begin{defn}
+    Neka je p program. Greška u programu p postoji ukoliko su svi pozivi funkcije \textbf{assume} pre poziva funkcije \textbf{assert} ili mogućeg prekoračenja vratili \textbf{true} i važi jedno od navedenog:
+    \begin{enumerate}
+        \item Funckija \textbf{assert} je vratila \textbf{false}.
+        \item Desilo se prekoračenje prilikom izvršavanja aritmetičke operacije.
+    \end{enumerate}
+\end{defn}
+
+Bijekcijom $\mathit{enc}(block) : BasicBlocks \rightarrow \mathbb{N}$ svakom osnovnom bloku dodeljujemo jedinstven prirodan broj koji se može predstaviti odgovarajućim bit-vektorom. Ukoliko je $N$ broj osnovnih blokova u programu, potrebno je $\lceil\log_{2}{|B| + 2}\rceil$ bitova za jedinstveno enkodiranje tih blokova. Promenljivu koja kodira trenutni blok označavamo sa \emph{curr}. S obzirom da vrednosti promenljivih mogu da zavise od vrednosti u prethodnom bloku, uvodimo promenljivu \emph{prev} koja kodira prethodni blok. Sada možemo da kodiramo skupove $\mathcal{I, G, U, T}$.
+
+
+\subsection{Kodiranje stanja programa}
+\label{subsec:KodiranjeStanja}
+
+Naš cilj je da pronađemo enkodiranje koje LLVM modul definisan u sekciji \ref{subsec:LLVM} prevodi u \emph{DimSpec} formulu. Stoga treba da definišemo četiri SMT formule $\{\mathcal{I}, \mathcal{G}, \mathcal{U}, \mathcal{T}\}$ takve da ukoliko postoji tranzicija od $\mathcal{I}$ do $\mathcal{G}$ definisana po $\mathcal{T}$ i ograničena sa $\mathcal{U}$ tada postoji greška u datom programu. Zatim ćemo dobijene SMT formule prevesti u KNF formule, što nam kao rezultat daje \emph{DimSpec} formulu. U nastavku će biti ukratko opisan postupak enkodiranja, dok se detaljni postupak može naći u \cite{ubsmc}.
+
+\begin{defn}
+Neka \emph{entry} označava prvi osnovni blok programa. Tada se incicijalna formula $\mathcal{I}(k), k \in \mathbb{N}$ definiše kao:
+    $$\begin{array}{rl}
+    curr = enc(\mathit{entry}) & \wedge \\
+    prev = enc(\mathit{entry}) &
+    \end{array}$$
+\end{defn}
+
+\begin{defn}
+Neka \emph{error} označava osnovni blok greške. Tada se ciljna formula $\mathcal{G}(k), k \in \mathbb{N}$ definiše kao:
+    $$\begin{array}{rl}
+    curr = enc(\mathit{error}) &
+    \end{array}$$
+\end{defn}
+
+Univerzalna formula $\mathcal{U}$ se sastoji od uslova koji moraju biti tačni u svakom stanju. Iz prethodne analize znamo da je broj bitova potrebnih za enkodiranje stanja $\lceil\log_{2}{|B| + 2}\rceil$. S obzirom da $|B| + 2$ nije nužno stepen dvojke, potencijalno smo enkodirali više brojeva. Ovi brojevi se moraju izostaviti u formuli $\mathcal{U}$.
+
+\begin{defn}
+Neka je $|B|$ broj osnovnih blokova u \emph{LLVM} modulu. Tada se univerzalna formula $\mathcal{U}(k), k \in \mathbb{N}$ definiše kao:
+    $$\begin{array}{rl}
+    curr \leq |B|+2 & \wedge \\
+    prev \leq |B|+2 &
+    \end{array}$$
+\end{defn}
+
+\subsection{Kodiranje prelaza između stanja}
+\label{subsec:KodiranjePrelaza}
+
+Enkodiranje tranzicione formule $\mathcal{T}$ ima oblik:
+    $$stanje(k) \Rightarrow stanje(k+1)$$
+
+Međutim, grananja predstavljaju problem, kao i pozivi funkcija. Na osnovu toga kojom instrukcijom se blok završava, potrebno ga je drugačije enkodirati. Zarad jednostavnosti, uvešćemo funkciju enkodiranja koja vrši enkodiranje blokova u zavisnosti od toga kojom instrukcijom se završavaju.
+$$\mathit{encode} : BasicBlocks \rightarrow SMTFormulas$$
+Sada možemo definisati tranzicionu formulu:
+
+\begin{defn}
+Neka je $BB$ skup svih osnovnih blokova u \emph{LLVM} modulu i neka je $\mathit{encode}(b), b \in BB$ funkcija enkodiranja opisana iznad. Tada se tranziciona formula $\mathcal{T}(k, k+1), k \in \mathbb{N}$ definiše kao:
+    $$\bigwedge_{b \in BB} \mathit{encode}(b)$$
+\end{defn}
+
+
+\subsection{Prevođenje SMT formule u SAT formulu}
+\label{subsec:SMTtoSAT}
+
+Enkodiranje opisano iznad nam kao rezultat daje četiri SMT formule. Ove formule je potrebno prevesti u KNF formule. Najčešće se to radi koristeći tehniku \emph{bit-blasting} \cite{bitblasting}. Nakon toga, dobijenu KNF formulu u \emph{DimSpec} formatu
+možemo proslediti inkrementalnim SAT rešavačima. Alat \emph{LLUMC} automatski vrši ovu transformaciju i kao rezultat vraća \emph{DimSpec} formulu.
+
+
+\section{Zaključak}
+\label{sec:Zakljucak}
+
+Neograničena provera modela proširuje skup programa koji se mogu verifikovati tehnikama provere modela tako što uklanja granicu koja je prisutna kod ograničene provere modela što omogućava verifikovanje programa koji imaju beskonačne petlje. Enkodiranjem stanja programa u \emph{DimSpec} format nam omogućava da koristimo već postojeće SAT rešavače za nalaženje modela. Takođe se mogu koristiti algoritmi provere invarijanti i paralelno SAT rešavanje kako bi se dobilo na performansama. Sledeći korak za unapređenje ove tehnike bi verovatno bila primena teorije nizova zarad primene na većem skupu programa.
+
+
+\addcontentsline{toc}{section}{Literatura}
+\appendix
+\bibliography{UBSMC}
+\bibliographystyle{plain}
+
+%\appendix
+%\section{Dodatak}
+
+
+\end{document}

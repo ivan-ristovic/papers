@@ -1,0 +1,295 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc} % make weird characters work
+\usepackage[english,serbian]{babel}
+%\usetheme{Pittsburgh}
+%\usecolortheme{beetle}
+\setbeamertemplate{navigation symbols}{}
+
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codeblue}{rgb}{0.0,0,0.82}
+\lstdefinestyle{mystyle}{
+    numbers=left,
+    numberstyle=\scriptsize,
+    numbersep=8pt,
+    commentstyle=\color{codegray},
+    keywordstyle=\color{codegreen},
+    numberstyle=\tiny\color{codeblue},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    xleftmargin=3em,
+    framexleftmargin=1.5em
+}
+\lstset{style=mystyle}
+
+\usepackage[font=scriptsize,labelfont=bf]{caption}
+
+\title{Neograničena provera modela softvera kroz inkrementalno SAT rešavanje}
+\author{Ivan Ristovi\'c}
+\date{}
+
+
+\begin{document}
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}{Uvod}
+    \begin{itemize}
+        \item Ograničena provera modela softvera
+        \item Inspiracija za neograničenu proveru modela softvera
+        \item Nov način kodiranja stanja programa omogućava uklanjanje granice koja postoji kod ograničene provere modela softvera
+        \item Kodiranje stanja programa u \emph{DimSpec} formulu korišćenjem alata \emph{LLUMC}
+        \item Korišćenje inkrementalnih SAT rešavača za nalaženje modela
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Opis rada neograničene provere modela}
+    \begin{itemize}
+        \item Sekvencijalni C kod
+        \item Prevođenje u \emph{LLVM} međureprezentacija C koda
+        \item Kodiranje stanja programa u SMT formule
+        \item Stanje greške predstavlja ciljno stanje
+        \item Prevođenje SMT formule u \emph{DimSpec} formulu (SAT)
+        \item Korišćenje inkrementalnih SAT rešavača za nalaženje modela ili algoritme za nalaženje invarijanti (\emph{IC3})
+        \item Model se koristi kao dokaz neispravnosti programa
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{LLVM reprezentacija}
+    \begin{itemize}
+        \item \emph{LLVM} je open-source compiler framework projekat.
+        \item Za neograničenu proveru modela se koristi \emph{LLVM} međureprezentacija C koda koja se naziva \emph{LLVM modul}.
+        \item \emph{LLVM} modul se može grupisati u nekoliko jedinica:
+            \begin{itemize}
+                \item instrukcija
+                \item osnovni blok
+                \item funkcija
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Prostor stanja programa}
+    \begin{itemize}
+        \item Stanja programa se posmatraju kao stanja svakog osnovnog bloka zasebno. Slično je i za tranzicije između stanja.
+        \item Jedno stanje se sastoji od promenljivih.
+        \item Svaka promenljiva se kodira kao bit-vektor dužine \emph{n}. Svi bitovi zasebno se posmatraju kao promenljive $x_{1},  \dots , x_{n}$.
+        \item Uvodimo dva specijalna stanja:
+            \begin{itemize}
+                \item \emph{ok} stanje - iz ovog stanja ne mogu nastati greške
+                \item \emph{error} stanje
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Prostor stanja programa}
+    \begin{itemize}
+        \item Ako je $|B|$ broj osnovnih blokova u programu, onda je  $\lceil\log_{2}{|B| + 2}\rceil$ bitova potrebno za enkodiranje jednog osnovnog bloka.
+        \item Promenljivu koja kodira trenutni blok označavamo sa \emph{curr}.
+        \item S obzirom da vrednosti promenljivih mogu da zavise od vrednosti u prethodnom bloku, uvodimo promenljivu \emph{prev} koja kodira prethodni blok.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{DimSpec formula}
+    \begin{itemize}
+        \item Svako stanje $t_{0}, \dots , t_{k}$ sadrži vrednosti promenljivih u tekućem osnovnom bloku.
+        \item \emph{DimSpec} formula $\mathcal{F}$ se sastoji od četiri SMT formule: $\mathcal{I}$, $\mathcal{U}$, $\mathcal{G}$ i $\mathcal{T}$.
+        \item $\mathcal{I}$ predstavlja skup inicijalnih klauza, tj. onih klauza koje stanje $t_{0}$ zadovoljava.
+        \item $\mathcal{G}$ predstavlja skup završnih klauza, tj. onih koje stanje $t_{k}$ zadovoljava.
+        \item $\mathcal{U}$ predstavlja skup klauza koje su zadovoljene stanjima $t_{i}$.
+        \item $\mathcal{T}$ predstavlja skup klauza koje su zadovoljene parovima stanja $t_{i}, t_{i+1}$.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{DimSpec formula}
+    \begin{itemize}
+        \item Testiranje da li je završno stanje dostižno iz početnog u \emph{k} koraka, je ekvivalentno ispitivanju zadovoljivosti formule $F_{k}$:
+        \begin{displaymath}
+            F_{k} = \mathcal{I}(0) \wedge \Bigg( \bigwedge_{i=0}^{k-1}{(\mathcal{U}(i) \wedge \mathcal{T}(i, i+1))} \Bigg) \wedge \mathcal{U}(k) \wedge \mathcal{G}(k)
+        \end{displaymath}
+        \item Jedan od načina da se nađe najmanji broj koraka za koje se završno stanje dostiže iz polaznog je da se rešavaju formule $F_{1}, F_{2}, \dots$ sve dok se ne nađe zadovoljiva formula.
+        \item Efikasan način da se ovo implementira je koriščenjem \emph{Incremental SAT-Solving-a}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Prevođenje SMT u SAT}
+    \begin{itemize}
+        \item Enkodiranje opisano iznad nam kao rezultat daje četiri SMT formule
+        \item \emph{bit-blasting}
+        \item \emph{LLUMC} automatski vrši ovu transformaciju
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Inkrementalno SAT rešavanje}
+    \begin{itemize}
+        \item Inkrementalno dodavanje klauza tokom rešavanja problema zadovoljivosti
+        \item Funkcije \emph{add(C)} i \emph{solve(A)}, gde je \emph{C} klauza a \emph{A} skup literala koji se nazivaju pretpostavke (engl. \emph{assumptions})
+        \item Klauze se dodaju koriščenjem funkcije \emph{add} i njihova konjunkcija se rešava pod predpostavkom da su vrednosti svih literala iz \emph{A} tačne, koristeći \emph{solve(A)}
+        \item Proces inkrementalnog SAT rešavanja za \emph{DimSpec} formule:
+            $$\begin{array}{rcl}
+            step(0) & : & \texttt{add}(\mathcal{I}(0) \wedge (a_{0} \vee \mathcal{G}(0)) \wedge \mathcal{U}(0)) \\
+                &   & \texttt{solve}(assumptions = \neg{a_{0}}) \\
+            step(k) & : & \texttt{add}(\mathcal{T}(k - 1, k) \wedge (a_{k} \vee \mathcal{G}(k)) \wedge \mathcal{U}(k)) \\
+                &   & \texttt{solve}(assumptions = \neg{a_{k}})
+            \end{array}$$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Ograničenja Unbounded Software Model Checking-a}
+    \begin{itemize}
+        \item Šta je uopste greška u softveru?
+        \item Nemoguće je pokriti sve moguće greške.
+        \item Stoga se u nastavku ograničavamo na \emph{prekoračenja}.
+        \item Koristićemo funkcije \texttt{assume} i \texttt{assert}.
+        \item Program se ponaša po specifikaciji ukoliko svi pozivi funkcije \texttt{assert} vrate \texttt{true} pod uslovom da su svi uslovi iz poziva \texttt{assume} zadovoljeni.
+    \end{itemize}
+    \newtheorem{definicija}{Definicija (Greška programa za alat LLUMC)}
+    \begin{definicija}
+        Neka je p program. Greška u programu p postoji ukoliko su svi pozivi funkcije \textbf{assume} pre poziva funkcije \textbf{assert} ili mogućeg prekoračenja vratili \textbf{true} i važi jedno od navedenog:
+        \begin{enumerate}
+            \item Funckija \textbf{assert} je vratila \textbf{false}.
+            \item Desilo se prekoračenje prilikom izvršavanja aritmetičke operacije.
+        \end{enumerate}
+    \end{definicija}
+\end{frame}
+
+\begin{frame}[fragile]{Primer}
+    \begin{figure}[!h]
+        \centering
+\begin{lstlisting}[language=C]
+int main(void)
+{
+    unsigned int x = 4294967295-101;
+    while (x >= 10) {
+        x += 2;
+    }
+    __VERIFIER_assert(x % 2);
+}
+\end{lstlisting}
+    \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]{Primer - LLVM međureprezentacija}
+    \begin{figure}[!h]
+        \centering
+\begin{lstlisting}[basicstyle=\tiny]
+define i32 @main() #0 {
+%1 = alloca i32, align 4
+%x = alloca i32, align 4
+store i32 0, i32* %1
+store i32 4294967194, i32* %x, align 4
+br label %2
+
+; <label>:2                            ; preds = %5, %0
+%3 = load i32, i32* %x, align 4
+%4 = icmp uge i32 %3, 10
+br i1 %4, label %5, label %8
+12
+; <label>:5                            ; preds = %2
+%6 = load i32, i32* %x, align 4
+%7 = add i32 %6, 2
+store i32 %7, i32* %x, align 4
+br label %2
+18
+; <label>:8                            ; preds = %2
+%9 = load i32, i32* %x, align 4
+%10 = urem i32 %9, 2
+call void @__VERIFIER_assert(i32 %10)
+%11 = load i32, i32* %1
+t i32 %11
+}
+\end{lstlisting}
+\end{figure}
+\end{frame}
+
+\begin{frame}[fragile]{Primer - Optimizovana LLVM međureprezentacija}
+    \begin{figure}[!h]
+        \centering
+\begin{lstlisting}[basicstyle=\tiny]
+define i32 @main() #0
+entry:
+%tmp = icmp uge i32 4294967194, 10
+br i1 %tmp, label %bb1, label %return
+
+bb1:                           ; preds = %entry, %bb1
+%x.0 = phi i32 [ %tmp2, %bb1 ], [ 4294967194, %entry ]
+%tmp2 = add i32 %x.0, 2
+%tmp3 = icmp uge i32 %tmp2, 10
+br i1 %tmp3, label %bb1, label %return
+
+return:                        ; preds = %bb1, %entry
+%x.1 = phi i32 [ 4294967194, %entry ], [ %tmp2, %bb1 ]
+%tmp4 = urem i32 %x.1, 2
+%tmp.i = icmp ne i32 %tmp4, 0
+br i1 %tmp.i, label %__VERIFIER_assert.exit, label %bb1.i
+
+bb1.i:                         ; preds = %return
+call void bitcast (void (...)* @__VERIFIER_error to void ()*)() #3
+unreachable
+
+__VERIFIER_assert.exit:        ; preds = %return
+ret i32 0
+\end{lstlisting}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Primer - Kodiranje stanja}
+    $$entry \rightarrow 1$$
+    $$bb1.lr.ph \rightarrow 2$$
+    $$bb1 \rightarrow 3$$
+    $$bb.return\_crit\_edge \rightarrow 4$$
+    $$return \rightarrow 5$$
+    $$bb.1 \rightarrow 6$$
+    $$\_\_VERIFIER\_assert\_exist \rightarrow 7$$
+    $$ok \rightarrow 8$$
+    $$error \rightarrow 9$$
+\end{frame}
+
+\begin{frame}{Primer - Kodiranje skupova $\mathcal{I}, \mathcal{G}, \mathcal{U}$}
+$$\mathcal{I} = \{ curr = 1 \wedge prev = 1 \}$$
+$$\mathcal{G} = \{ curr = 9 \}$$
+$$\mathcal{U} = \{ curr <= 9 \wedge prev <= 9 \}$$
+\end{frame}
+
+\begin{frame}{Primer - Kodiranje skupa $\mathcal{T}$}
+    $
+    \displaystyle
+    \small
+    \begin{array}{cl}
+    \mathcal{T} = \{ & \\
+    & (curr = 1 \wedge prev = 1 \Rightarrow curr' = 9 \wedge prev' = 9 \wedge tmp2' = tmp2) \\
+    \wedge & (curr = 2 \Rightarrow curr = 3 \wedge prev' = 2 \wedge tmp2' = tmp2) \\
+    \wedge & (curr = 3 \wedge 10 \leq (2 + ite(prev = 2, 10, tmp2)) \\
+    & \Rightarrow curr' = 3 \wedge prev' = 3 \wedge tmp2' = (2 + ite(prev = 2, 10, tmp2)))\\
+    \wedge & (curr = 3 \wedge 10 > (2 + ite(prev = 2, 10, tmp2)) \\
+    & \Rightarrow curr' = 4 \wedge prev' = 3 \wedge tmp2' = (2 + ite(prev = 2, 10, tmp2)))\\
+    \wedge & (curr = 4 \Rightarrow curr' = 5 \wedge prev' = 4 \wedge tmp2' = tmp2) \\
+    \wedge & (curr = 5 \wedge 0 \neq bvmod(ite(prev = 4, tmp2, 10), 2) \\
+    & \Rightarrow curr' = 7 \wedge prev' = 5 \wedge tmp2' = tmp2)\\
+    \wedge & (curr = 5 \wedge 0 = bvmod(ite(prev = 4, tmp2, 10), 2) \\
+    & \Rightarrow curr' = 6 \wedge prev' = 5 \wedge tmp2' = tmp2)\\
+    \wedge & (curr = 6 \Rightarrow curr' = 9 \wedge prev' = 6 \wedge tmp2' = tmp2) \\
+    \wedge & (curr = 7 \Rightarrow curr' = 8 \wedge prev' = 7 \wedge tmp2' = tmp2) \\
+    \wedge & (curr = 8 \Rightarrow curr' = 8 \wedge prev' = 8 \wedge tmp2' = tmp2) \\
+    \wedge & (curr = 9 \Rightarrow curr' = 9 \wedge prev' = 7 \wedge tmp2' = tmp2) \\
+    \} &
+    \end{array}
+    $
+\end{frame}
+
+\begin{frame}{Pitanja}
+    \centering
+    ???
+\end{frame}
+
+
+\end{document}
