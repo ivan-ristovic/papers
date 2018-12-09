@@ -1,0 +1,55 @@
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[a4paper]{article}
+
+\usepackage{color}
+\usepackage{url}
+\usepackage[utf8]{inputenc} % make weird characters work
+\usepackage{graphicx}
+\usepackage[english,serbian]{babel}
+\usepackage[unicode]{hyperref}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\hypersetup{colorlinks,citecolor=green,filecolor=green,linkcolor=blue,urlcolor=blue}
+
+
+\theoremstyle{plain}
+\newtheorem{thm}{Teorema}[section] % reset theorem numbering for each chapter
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definicija} % definition numbers are dependent on theorem numbers
+\newtheorem{exmp}[thm]{Primer} % same for example numbers
+
+
+\begin{document}
+
+\title{Procenjivanje minimalne povr\v{s}ine pravougaonih i konveksnih kontejnera za problem pakovanja konveksnih poligona \\ \small{Seminarski rad u okviru kursa\\Geometrijski algoritmi\\ Matematički fakultet}}
+
+\author{\href{mailto:mi14042@matf.bg.ac.rs}{Ivan Ristovi\'c}}
+\date{april 2018.}
+
+\maketitle
+
+\abstract{
+    test
+}
+
+\tableofcontents
+
+\newpage
+
+\section{Uvod}
+\label{sec:Uvod}
+
+test \cite{Paper}
+
+
+\addcontentsline{toc}{section}{Literatura}
+\appendix
+\bibliography{literatura}
+\bibliographystyle{plain}
+
+%\appendix
+%\section{Dodatak}
+
+
+\end{document}
