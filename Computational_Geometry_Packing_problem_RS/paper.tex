@@ -10,6 +10,11 @@
 \usepackage[unicode]{hyperref}
 \usepackage{amsthm}
 \usepackage{amssymb}
+\usepackage{float}
+\usepackage[graphicx]{realboxes}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{chngcntr}
+\counterwithin{figure}{section}
 \hypersetup{colorlinks,citecolor=green,filecolor=green,linkcolor=blue,urlcolor=blue}
 
 
@@ -17,6 +22,7 @@
 \newtheorem{thm}{Teorema}[section] % reset theorem numbering for each chapter
 \theoremstyle{definition}
 \newtheorem{defn}[thm]{Definicija} % definition numbers are dependent on theorem numbers
+\newtheorem{lem}[thm]{Lema} % lemma numbers are dependent on theorem
 \newtheorem{exmp}[thm]{Primer} % same for example numbers
 
 
@@ -75,6 +81,25 @@ Re\v{s}enje se zasniva na particionisanju $P$ na \emph{visinske klase} koriste\'
 
 \subsection{Pakovanje poligona iz jedne visinske klase}
 \label{subsec:Korak1}
+
+Bez umanjenja op\v{s}tosti, izaberimo proizvoljnu visinsku klasu $P_{i}$. Poligoni iz te klase imaju visine u opsegu $(\alpha h_{i}, h_{i}]$. Neka je $\sigma = [0, \infty) \times [0, h_{i}]$ polu-biskona\v{c}na traka visine $h_{i}$. Poligoni se u $\sigma$ stavljaju pohlepno.
+
+\begin{defn}
+    Za poligon $p$, neka je $s(p)$ du\v{z} koja spaja najni\v{z}e i najvi\v{s}e teme poligona $p$ posmatraju\'c{}i $y$-koordinatu. $s(p)$ nazivamo \emph{ki\v{c}mom} poligona $p$.
+\end{defn}
+
+Poligone iz $P_{i}$ sortiramo po nagibu njihovih ki\v{c}mi i postavljamo ih jedan po jedan u $\sigma$, pomeraju\'c{}i svaki ulevo sve dok ne dodiruje drugi poligon ili granicu od $\sigma$ (videti sliku \ref{fig1}). Kad se svi poligoni ubace u $\sigma$, trivijalno se formiraju granice kontejnera $B_{i}$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{resources/fig1.PNG}
+    \caption{Primer pakovanja poligona iz iste visinskoj klasi}
+    \label{fig1}
+\end{figure}
+
+\begin{lem}
+    Povr\v{s}ina kontejnera $B_{i}$ formiranog na gore opisani na\v{c}in zadovoljava: $$area(P_{i}) \leq 2/\alpha \cdot \sum_{p \in P_{i}}{area(p) + 2h_{i} \cdot max_{p \in P_{i}}{width(p)}}$$
+\end{lem}
 
 \subsection{Generisanje i pakovanje mini-kontejnera}
 \label{subsec:Korak2}
