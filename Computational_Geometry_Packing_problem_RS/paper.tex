@@ -101,9 +101,18 @@ Poligone iz $P_{i}$ sortiramo po nagibu njihovih ki\v{c}mi i postavljamo ih jeda
     Povr\v{s}ina kontejnera $B_{i}$ formiranog na gore opisani na\v{c}in zadovoljava: $$area(P_{i}) \leq 2/\alpha \cdot \sum_{p \in P_{i}}{area(p) + 2h_{i} \cdot max_{p \in P_{i}}{width(p)}}$$
 \end{lem}
 
+
 \subsection{Generisanje i pakovanje mini-kontejnera}
 \label{subsec:Korak2}
 
+Primenom koraka opisanog u delu \ref{subsec:Korak1} za sve visinske klase dobijamo kolekciju kontejnera $B_{i}$ razli\v{c}itih du\v{z}ina $l_{i}$. Svaki kontejner sadr\v{z}i sve poligone iz visinske klase $P_{i}$. Zamenjujemo svaki kontejner $B_{i}$ mini-kontejnerima jednakih du\v{z}ina na slede\'c{}i na\v{c}in: Neka je $w_{max}$ maksimalna du\v{z}ina poligona iz $P$. Prvo, particioni\v{s}emo $B_{i}$ u \emph{kutije} du\v{z}ine $cw_{max}$ (vrednost za $c$ \'c{}e biti odredjena kasnije) i visine $h_{i}$ \footnote{Osim poslednje kutije, koja mo\v{z}e da ima du\v{z}inu manju od $w_{max}$.}. Sada je potrebno podeliti svaki poligon $p \in P$ u kutiju $b$ koja sadr\v{z}i njegovu najlevlje teme \footnote{Ako najlevlje teme le\v{z}i na granici izmedju dve kutije, dodeljujemo ga desnoj.}. Sada generi\v{s}emo mini-kontejner za svaku kutiju $b$ tako \v{s}to pro\v{s}irujemo $b$ udesno sve dok njena \v{s}irina ne postane ta\v{c}no $(c+1)w_{max}$. Dobijamo kolekciju $\overline{R_{i}}$ od najvi\v{s}e $l_{i}/(cw_{max}) + 1$ mini-kontejnera gde svaki ima istu du\v{z}inu i visinu. Stoga:
+$$\sum_{b \in \overline{R_{i}}}{area(b)} \leq (1 + 1/c) \cdot area(B_{i}) + (c+1)w_{max}h_{i}$$
+
+Neka je $\overline{R} = \cup{\overline{R_{i}}}$ kolekcija svih mini-kontejnera dobijenih iznad. Nala\v{z}enje kontejnera za $R$ se obavlja trivijalno bez gubitka povr\v{s}ine postavljanjem mini-kontejnera jedan na drugi \footnote{Ovo je mogu\'c{}e jer svi mini-kontejneri imaju istu du\v{z}inu.}. Tako formiramo kontejner $B$.
+
+\begin{thm}
+    Neka je $P$ skup konveksnih poligona u ravni sa ukupnim brojem temena $n$. Mo\v{z}emo spakovati $P$ za vreme $O(n\log{}n)$ u kontejner $B$ koji je pravougaonik sa stranicama paralelnim koordinatnim osama takav da povr\v{s}ina $B$, u oznaci $area(B)$, zadovoljava uslov: $$area(B) \leq 17.45 \cdot OPT$$ gde je $OPT$ povr\v{s}ina optimalnog pravougaonog kontejnera za $P$. 
+\end{thm}
 
 \section{Konveksni kontejneri}
 \label{sec:Konveksni}
