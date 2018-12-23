@@ -36,7 +36,7 @@
 \maketitle
 
 \abstract{
-    Algoritmi za efikasno pakovanje objekata imaju va\v{z}ne primene. Sam problem ima raznorazne varijante, od kojih su autori izabrali pakovanje konveksnih poligona u kontejner oblika pravougaonika pri \v{c}emu su dozvoljene samo translacije poligona. Autori predstavljaju algoritam vremenske slo\v{z}enosti $O(n\log{}n)$ za re\v{s}avanje datog problema. \v{S}tavi\v{s}e, autori dokazuju da je povr\v{s}ina dobijenog re\v{s}enja najvi\v{s}e $17.45$ puta ve\'c{}a od optimalne, \v{s}to je prvi poznati dokaz da se ovako te\v{s}ki NP-te\v{s}ki problemi uop\v{s}te mogu aproksimirati. Takodje, autori razmatraju problem pakovanje poligona u konveksne kontejnere povr\v{s}ine najvi\v{s}e $27$ puta ve\'c{}e od optimalne.
+    Algoritmi za efikasno pakovanje objekata imaju va\v{z}ne primene. Sam problem ima raznorazne varijante, od kojih su autori izabrali pakovanje konveksnih poligona u kontejner oblika pravougaonika pri \v{c}emu su dozvoljene samo translacije poligona. Autori predstavljaju algoritam vremenske slo\v{z}enosti $O(n\log{}n)$ za aproksimaciju re\v{s}enja datog problema uz dokaz da je dobijena povr\v{s}ina najvi\v{s}e $17.45$ puta ve\'c{}a od optimalne, \v{s}to je prvi poznati dokaz da se ovakvi NP-te\v{s}ki problemi uop\v{s}te mogu aproksimirati. Takodje, autori daju aproksimaciju re\v{s}enja problema pakovanja konveksnih poligona u konveksne kontejnere sa ocenom povr\v{s}ine najvi\v{s}e $27$ puta ve\'c{}om od optimalne.
 }
 
 \tableofcontents
@@ -137,7 +137,17 @@ Pakovanje poligona opisano u delu \ref{subsec:Korak1} se mo\v{z}e efikasno uradi
 \section{Konveksni kontejneri}
 \label{sec:Konveksni}
 
+Potrebno je prona\'c{}i odgovaraju\'c{}u orijentaciju $\phi$, prona\'c{}i odgovaraju\'c{}i kontejner B te orijentacije na osnovu algoritma opisanog u delu \ref{sec:Pravougaoni} i vratiti B kao re\v{s}enje.
 
+Za dati skup poligona $P$, biramo $\phi*$  minimizuju\'c{}i $h_{max}(\phi)w_{max}(\phi)$, gde je $h_{max}(\phi)$ maksimalni doseg bilo kog poligona u smeru normalnom na $\phi$ a $w_{max}(\phi)$ maksimalni doseg u smeru $\phi$. Postoje algoritmi za ra\v{c}unanje $\phi*$ u $O(n\log{}n)$ \cite{paper} [1].
+
+Autori tvrde i pokazuju da, ukoliko ozna\v{c}imo optimalni konveksni kontejner sa $C_{opt}$, va\v{z}i: $$area(B_{opt}) \leq 2 \cdot area(C_{opt})$$
+
+Sli\v{c}no kao u prethodnom odeljku, nalaze se optimalne vrednosti za $\alpha$ i $c$, naime $\alpha = 1/3$ i $c = 2$, \v{s}to daje optimizacioni faktor $f(\alpha, c) = 27$.
+
+\begin{thm}
+    Neka je $P$ skup konveksnih poligona u ravni sa ukupno $n$ temena. $P$ se mo\v{z}e spakovati u vremenu $O(n\log{}n)$ u konveksni poligon B takav takav da povr\v{s}ina $B$, u oznaci $area(B)$, zadovoljava uslov: $$area(B) \leq 27 \cdot \textsc{OPT}$$ gde je \textsc{OPT} povr\v{s}ina optimalnog konveksnog kontejnera za $P$.  
+\end{thm}
 
 
 \addcontentsline{toc}{section}{Literatura}
