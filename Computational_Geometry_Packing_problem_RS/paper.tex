@@ -52,27 +52,27 @@ Oblik objekata je od velikog uticaja na slo\v{z}enost problema. U dve dimenzije 
 
 Ve\'c{} su jednostavne varijante ovog problema NP-te\v{s}ke, recimo pakovanje skupa pravougaonika sa stranicama paralelnim koordinatnim osama koriste\'c{}i samo translacije, \v{s}to je pokazano u \cite{OptimalPackingInPlane} tako da se polinomijalni algoritmi mogu konstruisati samo ukoliko je broj objekata konstantan \cite{BuildingThreeConvexPolygons, AligningTwoConvexFigures}. Stoga su konstruisani razni algoritmi za aproksimaciju koriste\'c{}i svakojake heuristike, ali mali je broj takvih algoritama za problem nala\v{z}enja \emph{kontejnera minimalne povr\v{s}ine} za objekte. 
 
-Ukoliko dozvolimo samo translacije objekata, svi poznati algoritmi koji daju optimalne rezultate ili dokazive aproksimacije spadaju u dve kategorije: ili pakuju spefici\v{c}ne tipove objekata, ili pakuju konstantni broj objekata. S obzirom da je problem pakovanja proizvoljnog broja objekata NP-te\v{z}ak, postavlja se pitanje: \emph{Da li je mogu\'c{}e efikasno aproksimirati re\v{s}enje problema pakovanja n objekata koji nisu paralelni sa koordinatnim osama?} Autori rada odgovaraju pozitivno, daju\'c{}i algoritam za aproksimaciju problema pakovanja skupa $P$ konveksnih poligona u pravougaoni kontejner minimalne povr\v{s}ine (opisan u delu \ref{sec:Pravougaoni}). Koriste\'c{}i ove rezultate mogu\'c{}e je takodje aproksimirati minimalni konveksni kontejner za $P$ (opisan u delu \ref{sec:Konveksni}). Oba algoritma imaju vremensku slo\v{z}enost $O(n\log{}n)$.
+S obzirom da je problem pakovanja proizvoljnog broja objekata NP-te\v{z}ak, postavlja se pitanje: \emph{Da li je mogu\'c{}e efikasno aproksimirati re\v{s}enje problema pakovanja n objekata?} Autori rada odgovaraju potvrdno, daju\'c{}i algoritam za aproksimaciju problema pakovanja skupa $P$ konveksnih poligona u pravougaoni kontejner minimalne povr\v{s}ine (opisan u delu \ref{sec:Pravougaoni}). Koriste\'c{}i ove rezultate mogu\'c{}e je takodje aproksimirati minimalni konveksni kontejner za $P$ (opisan u delu \ref{sec:Konveksni}). Oba algoritma imaju vremensku slo\v{z}enost $O(n\log{}n)$.
 
 
 \section{Pakovanje u pravougaone kontejnere}
 \label{sec:Pravougaoni}
 
 \begin{defn}
-    Neka je $P = \{ p_{1}, p_{2}, ... , p_{k} \}$ skup $k$ konveksnih poligona sa ukupno $n$ temena. Pravougaonik sa stranicama paralelnim koordinatnim osama u koji mo\v{z}emo da spakujemo sve poligone bez njihove prethodne rotacije nazivamo \emph{kontejner} za $P$.    
+    Neka je $P = \{ p_{1}, p_{2}, ... , p_{k} \}$ skup $k$ konveksnih poligona sa ukupno $n$ temena. Pravougaonik sa stranicama paralelnim koordinatnim osama u koji mo\v{z}emo da spakujemo sve poligone bez njihove prethodne rotacije nazivamo \emph{kontejner} za $P$.
 \end{defn}
 
-Cilj je prona\'c{}i kontejner za $P$ minimalne povr\v{s}ine, u daljem tekstu \emph{optimalni kontejner}. Neka je $b_{opt}$ optimalni kontejner za $P$ i neka je njegova povr\v{s}ina \textsc{OPT}. Algoritam koji autori predstavljaju nalazi kontejner povr\v{s}ine ne ve\'c{}e od $17,45 \cdot \textsc{OPT}$.
+Cilj je prona\'c{}i kontejner za $P$ minimalne povr\v{s}ine, u daljem tekstu \emph{optimalni kontejner}. Neka je $b_{opt}$ optimalni kontejner za $P$ i neka je njegova povr\v{s}ina \textsc{OPT}. Algoritam koji autori predstavljaju nalazi kontejner povr\v{s}ine ne ve\'c{}e od $17.45 \cdot \textsc{OPT}$.
 
 \begin{defn}
-    \emph{Visina} poligona $p$, u oznaci \emph{$height(p)$}, se defini\v{s}e kao razlika njegove maksimalne i minimalne $y$-koordinate. \emph{\v{S}irina} poligona $p$, u oznaci \emph{$width(p)$}, se defini\v{s}e kao razlika njegove maksimalne i minimalne $x$-koordinate.
+    \emph{Visina} (\v{Sirina}) poligona $p$, u oznaci \emph{$height(p)$} (\emph{$width(p)$}), se defini\v{s}e kao razlika njegove maksimalne i minimalne $y$ ($x$) koordinate.
 \end{defn}
 
 \begin{defn}
-    \emph{Maksimalna visina} skupa $P$, u oznaci \emph{$h_{max}$}, se defini\v{s}e kao maksimum visina svih poligona iz $P$, tj. $h_{max} = max_{p \in P}height(p)$. \emph{Maksimalna \v{s}irina} skupa $P$, u oznaci \emph{$w_{max}$}, se defini\v{s}e kao maksimum \v{s}irina svih poligona iz $P$, tj. $w_{max} = max_{p \in P}width(p)$. 
+    \emph{Maksimalna visina (\v{s}irina)} skupa $P$, u oznaci \emph{$h_{max} (w_{max})$}, se defini\v{s}e kao maksimum visina (\v{s}irina) svih poligona iz $P$.
 \end{defn}
 
-Re\v{s}enje se zasniva na particionisanju $P$ na \emph{visinske klase} koriste\'c{}i parametar $\alpha \in [0, 1]$ koji se kasnije bira tako da je aproksimativni faktor optimalan. Preciznije, $P$ se particioni\v{s}e u podskupove $P_{0}, P_{1}, \dots$ po visini: Poligoni sa visinom izmedju $h_{max}$ i $\alpha h_{max}$ se nalaze u $P_{0}$, poligoni sa visinom izmedju $h_{max}$ i $\alpha^{2} h_{max}$ se nalaze u $P_{1}$, itd. Generalno, $P_{i}$ sadr\v{z}i sve poligone $p \in P$ takve da je $h_{i+1} < height(p) \leq h_{i}$, gde je $h_{i} = \alpha^{i}h_{max}$. Algoritam se sastoji iz dva velika koraka:
+Re\v{s}enje se zasniva na particionisanju $P$ u \emph{visinske klase} $P_{0}, P_{1}, \dots$ po visini: Poligoni sa visinom izmedju $h_{max}$ i $\alpha h_{max}$ se nalaze u $P_{0}$, poligoni sa visinom izmedju $h_{max}$ i $\alpha^{2} h_{max}$ se nalaze u $P_{1}$, itd. Parametar $\alpha$ se kasnije bira tako da je aproksimativni faktor optimalan. Algoritam se sastoji iz dva velika koraka:
 \begin{itemize}
     \item Spakovati svaku visinsku klasu $P_{i}$ zasebno u kontejner $B_{i}$ visine $h_{i}$.
     \item Zameniti svaki neprazni kontejner $B_{i}$ kolekcijom \emph{mini-kontejnera} poravnatih sa koordinatnim osama koji nisu previ\v{s}e \v{s}iroki. Spakovati sve mini-kontejnere u jedinstveni kontejner $B$.
@@ -92,7 +92,7 @@ Poligone iz $P_{i}$ sortiramo po nagibu njihovih ki\v{c}mi i postavljamo ih jeda
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.8]{resources/fig1.PNG}
+    \includegraphics[scale=0.5]{resources/fig1.PNG}
     \caption{Primer pakovanja poligona iz iste visinske klase}
     \label{fig1}
 \end{figure}
@@ -105,18 +105,14 @@ Poligone iz $P_{i}$ sortiramo po nagibu njihovih ki\v{c}mi i postavljamo ih jeda
 \subsection{Generisanje i pakovanje mini-kontejnera}
 \label{subsec:Korak2}
 
-Primenom koraka opisanog u delu \ref{subsec:Korak1} za sve visinske klase dobijamo kolekciju kontejnera $B_{i}$ razli\v{c}itih du\v{z}ina $l_{i}$. Svaki kontejner sadr\v{z}i sve poligone iz visinske klase $P_{i}$. Zamenjujemo svaki kontejner $B_{i}$ mini-kontejnerima jednakih du\v{z}ina na slede\'c{}i na\v{c}in: Neka je $w_{max}$ maksimalna du\v{z}ina poligona iz $P$. Prvo, particioni\v{s}emo $B_{i}$ u \emph{kutije} du\v{z}ine $cw_{max}$ \footnote{Osim poslednje kutije, koja mo\v{z}e da ima du\v{z}inu manju od $w_{max}$.} (vrednost za $c$ \'c{}e biti odredjena kasnije) i visine $h_{i}$. Sada je potrebno podeliti svaki poligon $p \in P$ u kutiju $b$ koja sadr\v{z}i njegovu najlevlje teme \footnote{Ako najlevlje teme le\v{z}i na granici izmedju dve kutije, dodeljujemo ga desnoj.}. Sada generi\v{s}emo mini-kontejner za svaku kutiju $b$ tako \v{s}to pro\v{s}irujemo $b$ udesno sve dok njena \v{s}irina ne postane ta\v{c}no $(c+1)w_{max}$. Dobijamo kolekciju $\overline{R_{i}}$ od najvi\v{s}e $l_{i}/(cw_{max}) + 1$ mini-kontejnera gde svaki ima istu du\v{z}inu i visinu. Stoga:
+Primenom koraka opisanog u delu \ref{subsec:Korak1} za sve visinske klase dobijamo kolekciju kontejnera $B_{i}$ razli\v{c}itih du\v{z}ina $l_{i}$. Svaki kontejner sadr\v{z}i sve poligone iz visinske klase $P_{i}$. Zamenjujemo svaki kontejner $B_{i}$ mini-kontejnerima jednakih du\v{z}ina na slede\'c{}i na\v{c}in: Neka je $w_{max}$ maksimalna du\v{z}ina poligona iz $P$. Prvo, particioni\v{s}emo $B_{i}$ u \emph{kutije} du\v{z}ine $cw_{max}$ \footnote{Osim poslednje kutije, koja mo\v{z}e da ima du\v{z}inu manju od $w_{max}$.} (vrednost za $c$ se odredjuje kasnije) i visine $h_{i}$. Svaki poligon $p \in P$ se razvrstava u kutiju $b$ koja sadr\v{z}i njegovo najlevlje teme \footnote{Ako najlevlje teme le\v{z}i na granici izmedju dve kutije, dodeljujemo ga desnoj.}. Sada generi\v{s}emo mini-kontejner za svaku kutiju $b$ tako \v{s}to pro\v{s}irujemo $b$ udesno sve dok njena \v{s}irina ne postane ta\v{c}no $(c+1)w_{max}$. Dobijamo kolekciju $\overline{R_{i}}$ od najvi\v{s}e $l_{i}/(cw_{max}) + 1$ mini-kontejnera gde svaki ima istu du\v{z}inu i visinu. Stoga:
 $$\sum_{b \in \overline{R_{i}}}{area(b)} \leq (1 + 1/c) \cdot area(B_{i}) + (c+1)w_{max}h_{i}$$
 
 Neka je $\overline{R} = \cup{\overline{R_{i}}}$ kolekcija svih mini-kontejnera dobijenih iznad. Nala\v{z}enje kontejnera za $R$ se obavlja trivijalno bez gubitka povr\v{s}ine postavljanjem mini-kontejnera jedan na drugi \footnote{Ovo je mogu\'c{}e jer svi mini-kontejneri imaju istu du\v{z}inu.}. Tako formiramo kontejner $B$.
 
-\begin{thm}
-    Neka je $P$ skup konveksnih poligona u ravni sa ukupnim brojem temena $n$. Mo\v{z}emo spakovati $P$ za vreme $O(n\log{}n)$ u kontejner $B$ koji je pravougaonik sa stranicama paralelnim koordinatnim osama takav da povr\v{s}ina $B$, u oznaci $area(B)$, zadovoljava uslov: $$area(B) \leq 17.45 \cdot \textsc{OPT}$$ gde je \textsc{OPT} povr\v{s}ina optimalnog pravougaonog kontejnera za $P$. 
-\end{thm}
+Mo\v{z}e se pokazati da va\v{z}i: $$area(B) \leq \underbrace{\left(\left(1+\frac{1}{c}\right) \cdot \frac{2 + c\alpha}{\alpha - \alpha^{2}}\right)}_{f(c,\alpha)} \textsc{OPT}$$ 
 
-Mo\v{z}e se pokazati da je $$area(B) \leq \underbrace{\left(\left(1+\frac{1}{c}\right) \cdot \frac{2 + c\alpha}{\alpha - \alpha^{2}}\right)}_{f(c,\alpha)} \textsc{OPT}$$ 
-
-Kako bi se minimizovao aproksimatvni faktor, moraju se na\'c{}i optimalne vrednosti za $\alpha$ i $c$ tra\v{z}enjem nula parcijalnih izvoda $\frac{\partial f}{\partial c}$ i $\frac{\partial f}{\partial \alpha}$. Vrednost $\alpha$ za koje se dosti\v{z}e nula prvog parcijalnog izvoda je $\alpha = 2c^{2}$. Vrednost za $c$ je re\v{s}enje jeda\v{c}ine $c^{3} - 4c - 2 = 0$. Kona\v{c}no, dobijaju se vrednosti $\alpha \approx 0.407$ i $c \approx 2.214$, daju\'c{}i vrednost aproksimativnog faktora $f(c, \alpha) \approx 17.449$.
+Kako bi se minimizovao aproksimatvni faktor, moraju se na\'c{}i optimalne vrednosti za $\alpha$ i $c$, tj. $\alpha \approx 0.407$ i $c \approx 2.214$, daju\'c{}i vrednost aproksimativnog faktora $f(c, \alpha) \approx 17.449$.
 
 
 \subsection{Detalji implementacije}
@@ -128,7 +124,7 @@ Pakovanje poligona opisano u delu \ref{subsec:Korak1} se mo\v{z}e efikasno uradi
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.7]{resources/fig2.PNG}
+    \includegraphics[scale=0.5]{resources/fig2.PNG}
     \caption{Struktura podataka za ubacivanje poligona.}
     \label{fig2}
 \end{figure}
@@ -144,10 +140,6 @@ Za dati skup poligona $P$, biramo $\phi*$  minimizuju\'c{}i $h_{max}(\phi)w_{max
 Autori tvrde i pokazuju da, ukoliko ozna\v{c}imo optimalni konveksni kontejner sa $C_{opt}$, va\v{z}i: $$area(B_{opt}) \leq 2 \cdot area(C_{opt})$$
 
 Sli\v{c}no kao u prethodnom odeljku, nalaze se optimalne vrednosti za $\alpha$ i $c$, naime $\alpha = 1/3$ i $c = 2$, \v{s}to daje optimizacioni faktor $f(\alpha, c) = 27$.
-
-\begin{thm}
-    Neka je $P$ skup konveksnih poligona u ravni sa ukupno $n$ temena. $P$ se mo\v{z}e spakovati u vremenu $O(n\log{}n)$ u konveksni poligon B takav takav da povr\v{s}ina $B$, u oznaci $area(B)$, zadovoljava uslov: $$area(B) \leq 27 \cdot \textsc{OPT}$$ gde je \textsc{OPT} povr\v{s}ina optimalnog konveksnog kontejnera za $P$.  
-\end{thm}
 
 
 \addcontentsline{toc}{section}{Literatura}
