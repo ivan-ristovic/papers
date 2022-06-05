@@ -13,3 +13,6 @@
 [submodule "Information_Systems_Sports_Club"]
 	path = Information_Systems_Sports_Club
 	url = https://github.com/ivan-ristovic/sports-club
+[submodule "Database_Development_Discord_Bot"]
+	path = Database_Development_Discord_Bot
+	url = git@github.com:ivan-ristovic/pbp-gfdb.git
