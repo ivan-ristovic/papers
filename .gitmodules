@@ -22,3 +22,6 @@
 [submodule "Computational_Geometry_Packing"]
 	path = Computational_Geometry_Packing
 	url = git@github.com:ivan-ristovic/Packing.git
+[submodule "Software_Verification_UBSMC"]
+	path = Software_Verification_UBSMC
+	url = git@github.com:ivan-ristovic/UBSMC.git
