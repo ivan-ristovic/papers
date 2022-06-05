@@ -10,3 +10,6 @@
 [submodule "Algorithm_Construction_And_Analysis_2_Fibonacci_Heap"]
 	path = Algorithm_Construction_And_Analysis_2_Fibonacci_Heap
 	url = https://github.com/ivan-ristovic/fheap
+[submodule "Information_Systems_Sports_Club"]
+	path = Information_Systems_Sports_Club
+	url = https://github.com/ivan-ristovic/sports-club
