@@ -1,0 +1,9 @@
+[submodule "Software_Verification_Program_Synthesis"]
+	path = Software_Verification_Program_Synthesis
+	url = git@github.com:ivan-ristovic/Program-Synthesis-Paper.git
+[submodule "Data_Mining_Million_Songs_Dataset"]
+	path = Data_Mining_Million_Songs_Dataset
+	url = git@github.com:ivan-ristovic/MSD-mining.git
+[submodule "Automated_Reasoning_BDD"]
+	path = Automated_Reasoning_BDD
+	url = git@github.com:ivan-ristovic/BDD.git
