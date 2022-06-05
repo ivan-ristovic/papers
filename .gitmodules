@@ -19,3 +19,6 @@
 [submodule "Numerical_Analysis_Epicycles"]
 	path = Numerical_Analysis_Epicycles
 	url = https://github.com/ivan-ristovic/epicyclez
+[submodule "Computational_Geometry_Packing"]
+	path = Computational_Geometry_Packing
+	url = git@github.com:ivan-ristovic/Packing.git
