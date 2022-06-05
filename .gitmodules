@@ -16,3 +16,6 @@
 [submodule "Database_Development_Discord_Bot"]
 	path = Database_Development_Discord_Bot
 	url = git@github.com:ivan-ristovic/pbp-gfdb.git
+[submodule "Numerical_Analysis_Epicycles"]
+	path = Numerical_Analysis_Epicycles
+	url = https://github.com/ivan-ristovic/epicyclez
